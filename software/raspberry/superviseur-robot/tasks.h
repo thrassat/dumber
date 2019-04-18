@@ -66,6 +66,8 @@ private:
     ComRobot robot;
     int robotStarted = 0;
     int move = MESSAGE_ROBOT_STOP;
+    int batteryLevel = BatteryLevel.BATTERY_UNKNOWN;
+    
     
     /**********************************************************************/
     /* Tasks                                                              */
@@ -76,6 +78,7 @@ private:
     RT_TASK th_openComRobot;
     RT_TASK th_startRobot;
     RT_TASK th_move;
+    RT_TASK th_getBattery;
     
     /**********************************************************************/
     /* Mutex                                                              */
