@@ -66,7 +66,7 @@ private:
     ComRobot robot;
     int robotStarted = 0;
     int move = MESSAGE_ROBOT_STOP;
-    int batteryLevel = BatteryLevel.BATTERY_UNKNOWN;
+   // int batteryLevel = BatteryLevel.BATTERY_UNKNOWN;
     
     
     /**********************************************************************/
@@ -78,7 +78,16 @@ private:
     RT_TASK th_openComRobot;
     RT_TASK th_startRobot;
     RT_TASK th_move;
-    RT_TASK th_getBattery;
+    
+    //threads gestion robot
+    RT_TASK th_watchdog;
+    RT_TASK th_battery;
+        
+    //threads caméras
+    RT_TASK th_image;
+    RT_TASK th_startCamera;
+    
+    
     
     /**********************************************************************/
     /* Mutex                                                              */
@@ -88,6 +97,14 @@ private:
     RT_MUTEX mutex_robotStarted;
     RT_MUTEX mutex_move;
 
+    //mutex gestion robot
+    RT_MUTEX mutex_watchdog;
+    
+    //mutex caméra
+    RT_MUTEX mutex_arene;
+    RT_MUTEX mutex_position;
+    RT_MUTEX mutex_cameraStarted;
+
     /**********************************************************************/
     /* Semaphores                                                         */
     /**********************************************************************/
@@ -95,12 +112,28 @@ private:
     RT_SEM sem_openComRobot;
     RT_SEM sem_serverOk;
     RT_SEM sem_startRobot;
+    
+    //semaphore gestion_robot
+    //RT_SEM sem_getbattery ; 
+    RT_SEM sem_expiration ; 
+    RT_SEM sem_reloadCpt;
+    RT_SEM sem_batLevel;
+    
+    //semaphore caméra
+    RT_SEM sem_startCamera;
+   
 
     /**********************************************************************/
     /* Message queues                                                     */
     /**********************************************************************/
     int MSG_QUEUE_SIZE;
     RT_QUEUE q_messageToMon;
+    
+    // AJOUT DE TOUT LES MSG QUEUE NON DECLARE ? 
+    
+  
+     
+    
     
     /**********************************************************************/
     /* Tasks' functions                                                   */

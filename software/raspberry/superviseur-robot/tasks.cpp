@@ -75,6 +75,32 @@ void Tasks::Init() {
         cerr << "Error mutex create: " << strerror(-err) << endl << flush;
         exit(EXIT_FAILURE);
     }
+    
+    if (err = rt_mutex_create(&mutex_move, NULL)) {
+        cerr << "Error mutex create: " << strerror(-err) << endl << flush;
+        exit(EXIT_FAILURE);
+    }
+    
+    if (err = rt_mutex_create(&mutex_watchdog, NULL)) {
+        cerr << "Error mutex create: " << strerror(-err) << endl << flush;
+        exit(EXIT_FAILURE);
+    }
+    
+    if (err = rt_mutex_create(&mutex_arene, NULL)) {
+        cerr << "Error mutex create: " << strerror(-err) << endl << flush;
+        exit(EXIT_FAILURE);
+    }
+    
+    if (err = rt_mutex_create(&mutex_position, NULL)) {
+        cerr << "Error mutex create: " << strerror(-err) << endl << flush;
+        exit(EXIT_FAILURE);
+    }
+    
+    if (err = rt_mutex_create(&mutex_cameraStarted, NULL)) {
+        cerr << "Error mutex create: " << strerror(-err) << endl << flush;
+        exit(EXIT_FAILURE);
+    }
+    
     cout << "Mutexes created successfully" << endl << flush;
 
     /**************************************************************************************/
@@ -93,6 +119,31 @@ void Tasks::Init() {
         exit(EXIT_FAILURE);
     }
     if (err = rt_sem_create(&sem_startRobot, NULL, 0, S_FIFO)) {
+        cerr << "Error semaphore create: " << strerror(-err) << endl << flush;
+        exit(EXIT_FAILURE);
+    }
+    
+    if (err = rt_sem_create(&sem_barrier, NULL, 0, S_FIFO)) {
+        cerr << "Error semaphore create: " << strerror(-err) << endl << flush;
+        exit(EXIT_FAILURE);
+    }
+    
+   /* if (err = rt_sem_create(&sem_getbattery, NULL, 0, S_FIFO)) {
+        cerr << "Error semaphore create: " << strerror(-err) << endl << flush;
+        exit(EXIT_FAILURE);
+    }*/
+    
+    if (err = rt_sem_create(&sem_reloadCpt, NULL, 0, S_FIFO)) {
+        cerr << "Error semaphore create: " << strerror(-err) << endl << flush;
+        exit(EXIT_FAILURE);
+    }
+    
+    if (err = rt_sem_create(&sem_batLevel, NULL, 0, S_FIFO)) {
+        cerr << "Error semaphore create: " << strerror(-err) << endl << flush;
+        exit(EXIT_FAILURE);
+    }
+    
+    if (err = rt_sem_create(&sem_startCamera, NULL, 0, S_FIFO)) {
         cerr << "Error semaphore create: " << strerror(-err) << endl << flush;
         exit(EXIT_FAILURE);
     }
@@ -127,7 +178,23 @@ void Tasks::Init() {
     }
     
     //la tâche pour la lecture de la batterie
-    if (err = rt_task_create(&th_getBattery, "th_getBattery", 0, PRIORITY_TBATTERY, 0)) {
+    if (err = rt_task_create(&th_battery, "th_battery", 0, PRIORITY_TBATTERY, 0)) {
+        cerr << "Error task create: " << strerror(-err) << endl << flush;
+        exit(EXIT_FAILURE);
+    }
+    
+   
+    if (err = rt_task_create(&th_watchdog, "th_watchdog", 0, PRIORITY_TBATTERY, 0)) {
+        cerr << "Error task create: " << strerror(-err) << endl << flush;
+        exit(EXIT_FAILURE);
+    }
+    
+    if (err = rt_task_create(&th_image, "th_image", 0, PRIORITY_TBATTERY, 0)) {
+        cerr << "Error task create: " << strerror(-err) << endl << flush;
+        exit(EXIT_FAILURE);
+    }
+    
+    if (err = rt_task_create(&th_startCamera, "th_startCamera", 0, PRIORITY_TBATTERY, 0)) {
         cerr << "Error task create: " << strerror(-err) << endl << flush;
         exit(EXIT_FAILURE);
     }
@@ -141,6 +208,8 @@ void Tasks::Init() {
         cerr << "Error msg queue create: " << strerror(-err) << endl << flush;
         exit(EXIT_FAILURE);
     }
+
+    
     cout << "Queues created successfully" << endl << flush;
 
 }
@@ -177,10 +246,10 @@ void Tasks::Run() {
         exit(EXIT_FAILURE);
     }
     
-    if (err = rt_task_start(&th_getBattery, (void(*)(void*)) & Tasks::GetBatteryTask, this)) {
+    /*if (err = rt_task_start(&th_battery, (void(*)(void*)) & Tasks::GetBatteryTask, this)) {
         cerr << "Error task start: " << strerror(-err) << endl << flush;
         exit(EXIT_FAILURE);
-    }
+    }*/
     
 
     cout << "Tasks launched" << endl << flush;
@@ -376,7 +445,7 @@ void Tasks::MoveTask(void *arg) {
     /**************************************************************************************/
     /* The task starts here                                                               */
     /**************************************************************************************/
-    rt_task_set_periodic(NULL, TM_NOW, 100*10**6);
+    rt_task_set_periodic(NULL, TM_NOW, 100*10^6);
     //100 ms
 
     while (1) {
@@ -403,7 +472,7 @@ void Tasks::MoveTask(void *arg) {
 /**
  * @brief Thread handling control of the robot.
  */
-void Tasks::GetBatteryTask(void *arg) {
+/*void Tasks::GetBatteryTask(void *arg) {
     int rs;
     int levelBattery;
     
@@ -415,7 +484,7 @@ void Tasks::GetBatteryTask(void *arg) {
     /* The task starts here                                                               */
     /**************************************************************************************/
     //on set la période à 500ms
-    rt_task_set_periodic(NULL, TM_NOW, 500*10**6);
+   /* rt_task_set_periodic(NULL, TM_NOW, 500*10**6);
     
 
     while (1) {
@@ -433,9 +502,9 @@ void Tasks::GetBatteryTask(void *arg) {
             
             cout << message.ToString() << endl;
         }
-        cout <<endl << flush;
+        cout << endl << flush;
     }
-}
+}*/
 
 /**
  * Write a message in a given queue
