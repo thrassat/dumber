@@ -18,6 +18,18 @@
 #ifndef __TASKS_H__
 #define __TASKS_H__
 
+#define CAMERA_NOT_STARTED 0
+#define CAMERA_STARTED 1
+
+#define PAS_DE_REQUETE_ARENE 0
+#define REQUETE_CALCUL_ARENE 1
+
+#define PAS_DE_REQUETE_IMAGE 0
+#define REQUETE_CALCUL_IMAGE 1
+
+#define PAS_DE_REQUETE_POSITION 0
+#define REQUETE_CALCUL_POSITION 1
+
 #include <unistd.h>
 #include <iostream>
 
@@ -65,6 +77,16 @@ private:
     ComMonitor monitor;
     ComRobot robot;
     int robotStarted = 0;
+    
+    //protégée par le mutex_arene
+    int requeteArene= PAS_DE_REQUETE_ARENE;
+    //protégée par le mutex_image
+    int requeteImage= PAS_DE_REQUETE_IMAGE;
+    //protégée par le mutex_cameraStarted
+    int cameraStarted = CAMERA_NOT_STARTED;
+    //protégée par le mutex_position
+    int requetePosition = PAS_DE_REQUETE_POSITION;
+    
     int move = MESSAGE_ROBOT_STOP;
    // int batteryLevel = BatteryLevel.BATTERY_UNKNOWN;
     
@@ -84,7 +106,7 @@ private:
     RT_TASK th_battery;
         
     //threads caméras
-    RT_TASK th_image;
+    RT_TASK th_imageArenePos;
     RT_TASK th_startCamera;
     
     
@@ -104,6 +126,7 @@ private:
     RT_MUTEX mutex_arene;
     RT_MUTEX mutex_position;
     RT_MUTEX mutex_cameraStarted;
+    RT_MUTEX mutex_image;
 
     /**********************************************************************/
     /* Semaphores                                                         */

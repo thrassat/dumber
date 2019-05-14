@@ -29,6 +29,10 @@
 //priorité à changer peut être, on met une prio plus petite que mov car période plus grande
 #define PRIORITY_TBATTERY 23
 
+
+
+
+
 /*
  * Some remarks:
  * 1- This program is mostly a template. It shows you how to create tasks, semaphore
@@ -97,6 +101,11 @@ void Tasks::Init() {
     }
     
     if (err = rt_mutex_create(&mutex_cameraStarted, NULL)) {
+        cerr << "Error mutex create: " << strerror(-err) << endl << flush;
+        exit(EXIT_FAILURE);
+    }
+    
+    if (err = rt_mutex_create(&mutex_image, NULL)) {
         cerr << "Error mutex create: " << strerror(-err) << endl << flush;
         exit(EXIT_FAILURE);
     }
@@ -189,7 +198,7 @@ void Tasks::Init() {
         exit(EXIT_FAILURE);
     }
     
-    if (err = rt_task_create(&th_image, "th_image", 0, PRIORITY_TBATTERY, 0)) {
+    if (err = rt_task_create(&th_imageArenePos, "th_imageArenePos", 0, PRIORITY_TBATTERY, 0)) {
         cerr << "Error task create: " << strerror(-err) << endl << flush;
         exit(EXIT_FAILURE);
     }
@@ -505,6 +514,81 @@ void Tasks::MoveTask(void *arg) {
         cout << endl << flush;
     }
 }*/
+
+
+
+/**
+ * @brief Thread handling control of the robot.
+ */
+void Tasks::ImageArenePos(void *arg) {
+    //les trois variables ci dessous seront affectées avec les mutex
+    int cs; //camera started
+    int arene;
+    int calculPosition;
+    int demandeImg;
+    
+    cout << "Start " << "image arene pos" << endl << flush;
+    // Synchronization barrier (waiting that all tasks are starting)
+    rt_sem_p(&sem_barrier, TM_INFINITE);
+    
+    /**************************************************************************************/
+    /* The task starts here                                                               */
+    /**************************************************************************************/
+    rt_task_set_periodic(NULL, TM_NOW, 100*10^6);
+    //100 ms
+    
+    
+    while (1) {
+        rt_task_wait_period(NULL);
+        cout << "Periodic image arene pos" << endl << flush;
+        
+        //on récupère la variable protégée par le mutex mutex_cameraStarted
+        rt_mutex_acquire(&mutex_cameraStarted, TM_INFINITE);
+        cs = cameraStarted;
+        rt_mutex_release(&mutex_cameraStarted);
+        
+        
+        if (cs == CAMERA_STARTED) {
+          
+            rt_mutex_acquire(&mutex_arene, TM_INFINITE);
+            arene = requeteArene;
+            rt_mutex_release(&mutex_arene);
+            
+            //on calcule l'arène, on ne change pas la valeur du mutex
+            if (arene == REQUETE_CALCUL_ARENE) {
+                cout << "Calcul d'arène demandé" << endl << flush;
+                //Camera.Grab().SearchArena()
+            }
+            
+            rt_mutex_acquire(&mutex_image, TM_INFINITE);
+            demandeimg = requeteImage;
+            rt_mutex_release(&mutex_image);
+            
+            //on calcule l'arène, on ne change pas la valeur du mutex
+            if (arene == REQUETE_CALCUL_Image) {
+                cout << "Calcul d'image demandé" << endl << flush;
+                //Caméra.Grab()
+            }
+            
+            rt_mutex_acquire(&mutex_position, TM_INFINITE);
+            position = requetePosition;
+            rt_mutex_release(&mutex_positoin);
+            
+            //on calcule l'arène, on ne change pas la valeur du mutex
+            if (arene == REQUETE_CALCUL_Image) {
+                cout << "Calcul de position demandé" << endl << flush;
+                //Caméra.Grab()
+            }
+            
+            
+            
+            /*rt_mutex_acquire(&mutex_robot, TM_INFINITE);
+            robot.Write(new Message((MessageID)cpMove));
+            rt_mutex_release(&mutex_robot);*/
+        }
+        cout << endl << flush;
+    }
+}
 
 /**
  * Write a message in a given queue
