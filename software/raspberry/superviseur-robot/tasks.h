@@ -21,11 +21,12 @@
 #define CAMERA_NOT_STARTED 0
 #define CAMERA_STARTED 1
 
-#define PAS_DE_REQUETE_ARENE 0
-#define REQUETE_CALCUL_ARENE 1
+#define IS_NOT_CAPTURING_ARENA 0
+#define ARENA_CAPTURE_REQUEST 1
+#define IS_WAITING_VALIDATION 2
+#define IS_VALIDATED 2
+#define IS_NOT_VALIDATED 2
 
-#define PAS_DE_REQUETE_IMAGE 0
-#define REQUETE_CALCUL_IMAGE 1
 
 #define PAS_DE_REQUETE_POSITION 0
 #define REQUETE_CALCUL_POSITION 1
@@ -79,15 +80,18 @@ private:
     int robotStarted = 0;
     
     //protégée par le mutex_arene
-    int requeteArene= PAS_DE_REQUETE_ARENE;
-    //protégée par le mutex_image
-    int requeteImage= PAS_DE_REQUETE_IMAGE;
+    int captureArena = IS_NOT_CAPTURING_ARENA;
     //protégée par le mutex_cameraStarted
     int cameraStarted = CAMERA_NOT_STARTED;
     //protégée par le mutex_position
     int requetePosition = PAS_DE_REQUETE_POSITION;
+    // Acces à la caméra
+    Camera camera = NULL;
     
     int move = MESSAGE_ROBOT_STOP;
+    
+    //pour sotcket les adresses svg par l'utilisateur
+    Arena savedArena;
    // int batteryLevel = BatteryLevel.BATTERY_UNKNOWN;
     
     
@@ -100,13 +104,15 @@ private:
     RT_TASK th_openComRobot;
     RT_TASK th_startRobot;
     RT_TASK th_move;
+    RT_TASK th_arena;
     
     //threads gestion robot
     RT_TASK th_watchdog;
     RT_TASK th_battery;
         
     //threads caméras
-    RT_TASK th_imageArenePos;
+    RT_TASK th_imagePos;
+    RT_TASK th_arena;
     RT_TASK th_startCamera;
     
     
@@ -123,11 +129,11 @@ private:
     RT_MUTEX mutex_watchdog;
     
     //mutex caméra
-    RT_MUTEX mutex_arene;
+    RT_MUTEX mutex_captureArena;
     RT_MUTEX mutex_position;
     RT_MUTEX mutex_cameraStarted;
-    RT_MUTEX mutex_image;
-
+    RT_MUTEX mutex_savedArena;
+    RT_MUTEX mutex_camera;
     /**********************************************************************/
     /* Semaphores                                                         */
     /**********************************************************************/
@@ -207,7 +213,11 @@ private:
      * @return Message read
      */
     Message *ReadInQueue(RT_QUEUE *queue);
-
+    
+    /**
+     * @brief
+     */
+    void ImageArenaPos(void *args);
 };
 
 #endif // __TASKS_H__ 
