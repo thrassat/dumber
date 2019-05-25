@@ -86,12 +86,12 @@ private:
     //protégée par le mutex_position
     int requetePosition = PAS_DE_REQUETE_POSITION;
     // Acces à la caméra
-    Camera camera = NULL;
+    Camera camera;
     
     int move = MESSAGE_ROBOT_STOP;
     
     //pour sotcket les adresses svg par l'utilisateur
-    Arena savedArena;
+    Arena * savedArena;
    // int batteryLevel = BatteryLevel.BATTERY_UNKNOWN;
     
     
@@ -104,7 +104,6 @@ private:
     RT_TASK th_openComRobot;
     RT_TASK th_startRobot;
     RT_TASK th_move;
-    RT_TASK th_arena;
     
     //threads gestion robot
     RT_TASK th_watchdog;
@@ -196,6 +195,21 @@ private:
      * @brief Thread handling control of the robot.
      */
     void MoveTask(void *arg);
+    
+    /**
+     * @brief Thread handling image sending and position computing and sending.
+     */
+    void ImagePos(void *arg);
+    
+    /**
+     * @brief Thread handling arena searching
+     */
+    void ArenaTask(void *arg);
+    
+    /**
+     * @brief Thread handling the camera start
+     */
+    void StartCamera(void *arg);
     
     /**********************************************************************/
     /* Queue services                                                     */

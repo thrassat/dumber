@@ -264,15 +264,15 @@ void Tasks::Run() {
         cerr << "Error task start: " << strerror(-err) << endl << flush;
         exit(EXIT_FAILURE);
     }
-    if (err = rt_task_start(&th_imagePos (void(*)(void*)) & Tasks::ImagePos, this)) {
+    if (err = rt_task_start(&th_imagePos, (void(*)(void*)) & Tasks::ImagePos, this)) {
         cerr << "Error task start: " << strerror(-err) << endl << flush;
         exit(EXIT_FAILURE);
     }
-    if (err = rt_task_start(&th_arena (void(*)(void*)) & Tasks::ArenaTask, this)) {
+    if (err = rt_task_start(&th_arena, (void(*)(void*)) & Tasks::ArenaTask, this)) {
         cerr << "Error task start: " << strerror(-err) << endl << flush;
         exit(EXIT_FAILURE);
     }
-    if (err = rt_task_start(&th_startCamera (void(*)(void*)) & Tasks::StartCamera, this)) {
+    if (err = rt_task_start(&th_startCamera, (void(*)(void*)) & Tasks::StartCamera, this)) {
         cerr << "Error task start: " << strerror(-err) << endl << flush;
         exit(EXIT_FAILURE);
     }
@@ -531,7 +531,7 @@ void Tasks::MoveTask(void *arg) {
 
 
 /**
- * @brief
+ * @brief Thread handling image sending and position computing and sending.
  */
 void Tasks::ImagePos(void *arg) {
     //les trois variables ci dessous seront affectées avec les mutex
@@ -566,7 +566,8 @@ void Tasks::ImagePos(void *arg) {
 
             //on envoie l'image
             if (captArena == IS_NOT_CAPTURING_ARENA) {
-                Message * msgImage;
+                MessageImg * msgImage;
+                int reqPosition;
                 
                 cout << "Calcul d'image demandé" << endl << flush;
                 rt_mutex_acquire(&mutex_camera, TM_INFINITE);
@@ -576,33 +577,44 @@ void Tasks::ImagePos(void *arg) {
                 rt_mutex_acquire(&mutex_position, TM_INFINITE);
                 reqPosition = requetePosition;
                 rt_mutex_release(&mutex_position);
-
+                
+               
                 //on calcule la position si demandé
                 if (reqPosition == REQUETE_CALCUL_POSITION) {
-                    cout << "Calcul de position demandé" << endl << flush;
-                    std::list<Position> positions = image.SearchRobot();
-                    Position position;
+                    Arena * sArena;
                     
-                    if (positions.empty()) {
-                        //le robot n'a pas été trouvé
-                        position=new Position();
-                        position.NotFound();
-                    } else {
-                        position=positions.front();
-                    }
-                    image.DrawRobot(position);
-                    
-                    //TODO (?) message (-1 ; -1) si robot non trouvé
-                    Message * msgPosition;
-                    //on convertit la position en string pour le mettre dans le message
-                    msgPosition = new Message(position.ToString());
-                    WriteInQueue(&q_messageToMon, msgPosition);
+                        rt_mutex_acquire(&mutex_savedArena, TM_INFINITE);
+                        sArena = savedArena;
+                        rt_mutex_release(&mutex_savedArena);
+
+                        if (sArena!=NULL) {
+
+                            cout << "Calcul de position demandé" << endl << flush;
+                            std::list<Position> positions = image.SearchRobot(*sArena);
+                            Position position;
+
+                            if (positions.empty()) {
+                                //le robot n'a pas été trouvé
+                                position.NotFound();
+                            } else {
+                                position=positions.front();
+                            }
+                            image.DrawRobot(position);
+
+                            //TODO (?) message (-1 ; -1) si robot non trouvé
+                            MessagePosition * msgPosition;
+                            //crée et envoie le message
+                            msgPosition = new MessagePosition(MESSAGE_CAM_POSITION, position);
+                            WriteInQueue(&q_messageToMon, msgPosition);
+                        } else {
+                            cout << "Please define an arena before asking for position" << endl << flush;
+                        }
                 }
                 
                  //on convertit l'image en string pour le mettre dans le message
-                msgImg = new Message(image.ToString());
+                msgImage = new MessageImg(MESSAGE_CAM_IMAGE, &image);
                 
-                WriteInQueue(&q_messageToMon, msgImg); // msgSend will be deleted by sendToMon
+                WriteInQueue(&q_messageToMon, msgImage); // msgSend will be deleted by sendToMon
             }
          
             /*rt_mutex_acquire(&mutex_robot, TM_INFINITE);
@@ -614,21 +626,21 @@ void Tasks::ImagePos(void *arg) {
 }
 
 /**
- * @brief
+ * @brief Thread handling arena searching
  */
 void Tasks::ArenaTask(void *arg) {
     cout << "Start " << __PRETTY_FUNCTION__ << endl << flush;
     // Synchronization barrier (waiting that all tasks are starting)
     rt_sem_p(&sem_barrier, TM_INFINITE);
     
-    Img image;
-    Arena arena;
     
+    Arena arena;
+    int cs;
     /**************************************************************************************/
     /* The task ArenaTask starts here                                                    */
     /**************************************************************************************/
     while (1) {
-
+        
       //on récupère la variable protégée par le mutex mutex_cameraStarted
         rt_mutex_acquire(&mutex_cameraStarted, TM_INFINITE);
         cs = cameraStarted;
@@ -643,17 +655,17 @@ void Tasks::ArenaTask(void *arg) {
 
             //on calcule l'arène
             if (captArena == ARENA_CAPTURE_REQUEST) {
-                Message * msgArena;
+                MessageImg * msgArena;
                 
                 cout << "Calcul d'arène demandé" << endl << flush;
                 
                 rt_mutex_acquire(&mutex_camera, TM_INFINITE);
-                image = camera.Grab();
+                Img image = camera.Grab();
                 rt_mutex_release(&mutex_cameraStarted);                
                 
                 arena = image.SearchArena();
                 image.DrawArena(arena);
-                msgArena = new Message(arena.ToString());
+                msgArena = new MessageImg(MESSAGE_CAM_IMAGE, &image);
                 WriteInQueue(&q_messageToMon, msgArena);
            
                 rt_mutex_acquire(&mutex_captureArena, TM_INFINITE);
@@ -666,7 +678,7 @@ void Tasks::ArenaTask(void *arg) {
                 
                 //on svg l'arène
                 rt_mutex_acquire(&mutex_savedArena, TM_INFINITE);
-                savedArena = arena;
+                savedArena = &arena;
                 rt_mutex_release(&mutex_savedArena);
                 
                 /*
@@ -698,7 +710,7 @@ void Tasks::ArenaTask(void *arg) {
 
 
 /**
- * @brief
+ * @briefThread handling the camera start
  */
 void Tasks::StartCamera(void *arg) {
     cout << "Start " << __PRETTY_FUNCTION__ << endl << flush;
@@ -714,7 +726,6 @@ void Tasks::StartCamera(void *arg) {
     cout << "Creation de la caméra" << endl << flush;
     
     rt_mutex_acquire(&mutex_camera, TM_INFINITE);
-    camera = new Camera();
     isOpen = camera.Open();
     rt_mutex_release(&mutex_cameraStarted);
      
