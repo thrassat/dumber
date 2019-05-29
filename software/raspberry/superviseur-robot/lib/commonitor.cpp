@@ -124,7 +124,6 @@ int ComMonitor::AcceptClient() {
     int c = sizeof (struct sockaddr_in);
 
     clientID = accept(socketFD, (struct sockaddr *) &client, (socklen_t*) & c);
-
     if (clientID < 0)
         throw std::runtime_error {"Accept failed"};
 

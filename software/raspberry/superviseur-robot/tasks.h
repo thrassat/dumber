@@ -65,6 +65,9 @@ private:
     ComMonitor monitor;
     ComRobot robot;
     int robotStarted = 0;
+    int watchdog = 0 ; 
+    int errorCompteur=0; //Compte le nombre d'erreur d'ecriture 
+    bool arretConnexion = false;
     int move = MESSAGE_ROBOT_STOP;
    // int batteryLevel = BatteryLevel.BATTERY_UNKNOWN;
     
@@ -82,6 +85,7 @@ private:
     //threads gestion robot
     RT_TASK th_watchdog;
     RT_TASK th_battery;
+    
         
     //threads caméras
     RT_TASK th_image;
@@ -99,6 +103,8 @@ private:
 
     //mutex gestion robot
     RT_MUTEX mutex_watchdog;
+    RT_MUTEX mutex_errorCompteur;
+    RT_MUTEX mutex_arretConnexion ;
     
     //mutex caméra
     RT_MUTEX mutex_arene;
@@ -114,10 +120,10 @@ private:
     RT_SEM sem_startRobot;
     
     //semaphore gestion_robot
-    //RT_SEM sem_getbattery ; 
+    RT_SEM sem_getbattery ; 
     RT_SEM sem_expiration ; 
     RT_SEM sem_reloadCpt;
-    RT_SEM sem_batLevel;
+    //RT_SEM sem_batLevel; Supprime si on considere que get battery recupere directement la reponse du robot, supp du draw.io si on laisse commenté
     
     //semaphore caméra
     RT_SEM sem_startCamera;
@@ -167,6 +173,18 @@ private:
      * @brief Thread handling control of the robot.
      */
     void MoveTask(void *arg);
+    
+    // Ours 
+    
+    // Task thread
+    
+    void GetBatteryTask(void *arg) ; 
+    void WatchdogTask(void *arg) ; 
+     
+     // Auxiliary task
+    
+    void compteur_robot(Message *msg) ; 
+    
     
     /**********************************************************************/
     /* Queue services                                                     */

@@ -27,7 +27,9 @@
 #include <stdexcept>
 
 #ifdef __FOR_PC__
-#define USART_FILENAME "/dev/ttyUSB0"
+#define USART_FILENAME "/dev/ttyUSB0"static Message *GetBattery() {
+        return new Message(MESSAGE_ROBOT_BATTERY_GET);
+    }
 #else
 #define USART_FILENAME "/dev/ttyS0"
 #endif /* __FOR_PC__ */

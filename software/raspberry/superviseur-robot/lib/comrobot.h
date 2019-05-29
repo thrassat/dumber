@@ -147,7 +147,7 @@ public:
     static Message *GetBattery() {
         return new Message(MESSAGE_ROBOT_BATTERY_GET);
     }
-
+protected:
     static Message *GetState() {
         return new Message(MESSAGE_ROBOT_STATE_GET);
     }
