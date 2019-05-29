@@ -91,7 +91,11 @@ private:
     // Acces à la caméra
     Camera camera;
     
+    int watchdog = 0 ; 
+    int errorCompteur=0; //Compte le nombre d'erreur d'ecriture 
+    bool arretConnexion = false;
     int move = MESSAGE_ROBOT_STOP;
+    
     
     bool arenaAvailable = ARENA_AVAILABLE;
     
@@ -133,6 +137,8 @@ private:
 
     //mutex gestion robot
     RT_MUTEX mutex_watchdog;
+    RT_MUTEX mutex_errorCompteur;
+    RT_MUTEX mutex_arretConnexion ;
     
     //mutex caméra
     RT_MUTEX mutex_captureArena;
@@ -149,11 +155,10 @@ private:
     RT_SEM sem_serverOk;
     RT_SEM sem_startRobot;
     
-    //semaphore gestion_robot
-    //RT_SEM sem_getbattery ; 
-    RT_SEM sem_expiration ; 
+   //semaphore gestion_robot
+    RT_SEM sem_getbattery; 
     RT_SEM sem_reloadCpt;
-    RT_SEM sem_batLevel;
+  
     
     //semaphore caméra
     RT_SEM sem_startCamera;
@@ -189,20 +194,9 @@ private:
      */
     void ReceiveFromMonTask(void *arg);
     
-    /**
-     * @brief Thread opening communication with the robot.
-     */
-    void OpenComRobot(void *arg);
 
-    /**
-     * @brief Thread starting the communication with the robot.
-     */
-    void StartRobotTask(void *arg);
     
-    /**
-     * @brief Thread handling control of the robot.
-     */
-    void MoveTask(void *arg);
+    //camera tasks : 
     
     /**
      * @brief Thread handling image sending and position computing and sending.
@@ -218,6 +212,30 @@ private:
      * @brief Thread handling the camera start
      */
     void StartCamera(void *arg);
+    
+    // Gestion robot tasks : 
+    
+     /**
+     * @brief Thread opening communication with the robot.
+     */
+    void OpenComRobot(void *arg);
+
+    /**
+     * @brief Thread starting the communication with the robot.
+     */
+    void StartRobotTask(void *arg);
+    
+    /**
+     * @brief Thread handling control of the robot.
+     */
+    void MoveTask(void *arg);
+    
+    void GetBatteryTask(void *arg) ;
+    
+    void WatchdogTask(void *arg) ; 
+     
+     // Auxiliary task
+    void compteur_robot(Message *msg) ; 
     
     /**********************************************************************/
     /* Queue services                                                     */
