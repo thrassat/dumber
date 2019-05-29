@@ -229,16 +229,17 @@ void Tasks::Init() {
         exit(EXIT_FAILURE);
     }
     
-<<<<<<< HEAD
-   /* PRIORITE  if (err = rt_task_create(&th_image, "th_image", 0, PRIORITY_TBATTERY, 0)) {
-=======
+   if (err = rt_task_create(&th_image, "th_image", 0, PRIORITY_TBATTERY, 0)) {
+       cerr << "Error task create: " << strerror(-err) << endl << flush;
+       exit(EXIT_FAILURE);
+    }
+
    if (err = rt_task_create(&th_imagePos, "th_imagePos", 0, PRIORITY_TIMAGEPOS, 0)) {
         cerr << "Error task create: " << strerror(-err) << endl << flush;
         exit(EXIT_FAILURE);
     }
     
     if (err = rt_task_create(&th_startCamera, "th_startCamera", 0, PRIORITY_TCAMERA, 0)) {
->>>>>>> master
         cerr << "Error task create: " << strerror(-err) << endl << flush;
         exit(EXIT_FAILURE);
     }
@@ -246,7 +247,7 @@ void Tasks::Init() {
     if (err = rt_task_create(&th_arena, "th_arena", 0, PRIORITY_TARENE, 0)) {
         cerr << "Error task create: " << strerror(-err) << endl << flush;
         exit(EXIT_FAILURE);
-    } */
+    }
     
     cout << "Tasks created successfully" << endl << flush;
 
@@ -1027,4 +1028,3 @@ void Tasks::StartCamera(void *arg) {
 
 
 
-}

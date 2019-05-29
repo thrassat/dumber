@@ -96,7 +96,6 @@ private:
     // Acces à la caméra
     Camera camera;
     
-r
     int move = MESSAGE_ROBOT_STOP;
     
     bool arenaAvailable = ARENA_AVAILABLE;
