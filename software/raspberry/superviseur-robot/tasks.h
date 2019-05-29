@@ -31,6 +31,9 @@
 #define PAS_DE_REQUETE_POSITION 0
 #define REQUETE_CALCUL_POSITION 1
 
+#define ARENA_AVAILABLE 0
+#define ARENA_NOT_AVAILABLE 1
+
 #include <unistd.h>
 #include <iostream>
 
@@ -90,6 +93,10 @@ private:
     
     int move = MESSAGE_ROBOT_STOP;
     
+    bool arenaAvailable = ARENA_AVAILABLE;
+    
+    
+    
     //pour sotcket les adresses svg par l'utilisateur
     Arena * savedArena;
    // int batteryLevel = BatteryLevel.BATTERY_UNKNOWN;
@@ -133,6 +140,7 @@ private:
     RT_MUTEX mutex_cameraStarted;
     RT_MUTEX mutex_savedArena;
     RT_MUTEX mutex_camera;
+    RT_MUTEX mutex_arenaAvailable;
     /**********************************************************************/
     /* Semaphores                                                         */
     /**********************************************************************/

@@ -117,6 +117,11 @@ void Tasks::Init() {
         exit(EXIT_FAILURE);
     }
     
+    if (err = rt_mutex_create(&mutex_arenaAvailable, NULL)) {
+        cerr << "Error mutex create: " << strerror(-err) << endl << flush;
+        exit(EXIT_FAILURE);
+    }
+    
     cout << "Mutexes created successfully" << endl << flush;
 
     /**************************************************************************************/
@@ -556,6 +561,9 @@ void Tasks::ImagePos(void *arg) {
     Arena * sArena;
     Img * image;
     MessagePosition * msgPosition;
+    Position position;
+    
+    bool arAv;
     
     
     while (1) {
@@ -603,15 +611,19 @@ void Tasks::ImagePos(void *arg) {
                 //on calcule la position si demandé
                 if (reqPosition == REQUETE_CALCUL_POSITION) {
                     
-                        rt_mutex_acquire(&mutex_savedArena, TM_INFINITE);
-                        sArena = savedArena;
-                        rt_mutex_release(&mutex_savedArena);
+                        rt_mutex_acquire(&mutex_arenaAvailable, TM_INFINITE);
+                        arAv = arenaAvailable;
+                        rt_mutex_release(&mutex_arenaAvailable);
 
-                        if (sArena!=NULL) {
+                        if (arAv) {
+                            
+                            rt_mutex_acquire(&mutex_savedArena, TM_INFINITE);
+                            sArena = savedArena;
+                            rt_mutex_release(&mutex_savedArena);
 
                             cout << "Calcul de position demandé" << endl << flush;
                             std::list<Position> positions = image->SearchRobot(*sArena);
-                            Position position;
+                            
 
                             if (positions.empty()) {
                                 //le robot n'a pas été trouvé
@@ -628,6 +640,9 @@ void Tasks::ImagePos(void *arg) {
                             WriteInQueue(&q_messageToMon, msgPosition);
                         } else {
                             cout << "Please define an arena before asking for position" << endl << flush;
+                            position.NotFound();
+                            msgPosition = new MessagePosition(MESSAGE_CAM_POSITION, position);
+                            WriteInQueue(&q_messageToMon, msgPosition);
                         }
                 }
                 /***********************end position part**************/   
@@ -709,6 +724,10 @@ void Tasks::ArenaTask(void *arg) {
                 rt_mutex_acquire(&mutex_savedArena, TM_INFINITE);
                 savedArena = &arena;
                 rt_mutex_release(&mutex_savedArena);
+                
+                rt_mutex_acquire(&mutex_arenaAvailable, TM_INFINITE);
+                arenaAvailable=true;
+                rt_mutex_release(&mutex_arenaAvailable);
                 
                 cout << "ARENE VALIDEE" << endl << flush;
                 
