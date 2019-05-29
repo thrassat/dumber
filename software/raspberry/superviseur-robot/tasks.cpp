@@ -30,6 +30,12 @@
 //priorité à changer peut être, on met une prio plus petite que mov car période plus grande
 #define PRIORITY_TBATTERY 23
 #define PRIORITY_TWD 22
+#define PRIORITY_TIMAGEPOS 24
+#define PRIORITY_TARENE 19
+
+
+
+
 
 /*
  * Some remarks:
@@ -88,7 +94,7 @@ void Tasks::Init() {
         exit(EXIT_FAILURE);
     }
     
-    if (err = rt_mutex_create(&mutex_arene, NULL)) {
+    if (err = rt_mutex_create(&mutex_captureArena, NULL)) {
         cerr << "Error mutex create: " << strerror(-err) << endl << flush;
         exit(EXIT_FAILURE);
     }
@@ -107,12 +113,26 @@ void Tasks::Init() {
         cerr << "Error mutex create: " << strerror(-err) << endl << flush;
         exit(EXIT_FAILURE);
     }
-    
-    if (err = rt_mutex_create(&mutex_arretConnexion, NULL)) {
+
+    if (err = rt_mutex_create(&mutex_savedArena, NULL)) {
         cerr << "Error mutex create: " << strerror(-err) << endl << flush;
         exit(EXIT_FAILURE);
     }
     
+    if (err = rt_mutex_create(&mutex_arretConnexion, NULL)) {
+        exit(EXIT_FAILURE);
+    }
+
+    if (err = rt_mutex_create(&mutex_camera, NULL)) {
+        cerr << "Error mutex create: " << strerror(-err) << endl << flush;
+        exit(EXIT_FAILURE);
+    }
+    
+    if (err = rt_mutex_create(&mutex_arenaAvailable, NULL)) {
+        cerr << "Error mutex create: " << strerror(-err) << endl << flush;
+        exit(EXIT_FAILURE);
+    }
+
     
     cout << "Mutexes created successfully" << endl << flush;
 
@@ -209,12 +229,21 @@ void Tasks::Init() {
         exit(EXIT_FAILURE);
     }
     
+<<<<<<< HEAD
    /* PRIORITE  if (err = rt_task_create(&th_image, "th_image", 0, PRIORITY_TBATTERY, 0)) {
+=======
+   if (err = rt_task_create(&th_imagePos, "th_imagePos", 0, PRIORITY_TIMAGEPOS, 0)) {
         cerr << "Error task create: " << strerror(-err) << endl << flush;
         exit(EXIT_FAILURE);
     }
     
-    if (err = rt_task_create(&th_startCamera, "th_startCamera", 0, PRIORITY_TBATTERY, 0)) {
+    if (err = rt_task_create(&th_startCamera, "th_startCamera", 0, PRIORITY_TCAMERA, 0)) {
+>>>>>>> master
+        cerr << "Error task create: " << strerror(-err) << endl << flush;
+        exit(EXIT_FAILURE);
+    }
+    
+    if (err = rt_task_create(&th_arena, "th_arena", 0, PRIORITY_TARENE, 0)) {
         cerr << "Error task create: " << strerror(-err) << endl << flush;
         exit(EXIT_FAILURE);
     } */
@@ -224,7 +253,7 @@ void Tasks::Init() {
     /**************************************************************************************/
     /* Message queues creation                                                            */
     /**************************************************************************************/
-    if ((err = rt_queue_create(&q_messageToMon, "q_messageToMon", sizeof (Message*)*50, Q_UNLIMITED, Q_FIFO)) < 0) {
+    if ((err = rt_queue_create(&q_messageToMon, "q_messageToMon", sizeof (Message*)*500, Q_UNLIMITED, Q_FIFO)) < 0) {
         cerr << "Error msg queue create: " << strerror(-err) << endl << flush;
         exit(EXIT_FAILURE);
     }
@@ -262,6 +291,18 @@ void Tasks::Run() {
         exit(EXIT_FAILURE);
     }
     if (err = rt_task_start(&th_move, (void(*)(void*)) & Tasks::MoveTask, this)) {
+        cerr << "Error task start: " << strerror(-err) << endl << flush;
+        exit(EXIT_FAILURE);
+    }
+    if (err = rt_task_start(&th_imagePos, (void(*)(void*)) & Tasks::ImagePos, this)) {
+        cerr << "Error task start: " << strerror(-err) << endl << flush;
+        exit(EXIT_FAILURE);
+    }
+    if (err = rt_task_start(&th_arena, (void(*)(void*)) & Tasks::ArenaTask, this)) {
+        cerr << "Error task start: " << strerror(-err) << endl << flush;
+        exit(EXIT_FAILURE);
+    }
+    if (err = rt_task_start(&th_startCamera, (void(*)(void*)) & Tasks::StartCamera, this)) {
         cerr << "Error task start: " << strerror(-err) << endl << flush;
         exit(EXIT_FAILURE);
     }
@@ -413,6 +454,35 @@ void Tasks::ReceiveFromMonTask(void *arg) {
             rt_mutex_acquire(&mutex_move, TM_INFINITE);
             move = msgRcv->GetID();
             rt_mutex_release(&mutex_move);
+            //Rajouté par Omar et Antoine : demande ouverture caméra
+        } else if (msgRcv->CompareID(MESSAGE_CAM_OPEN)) {
+            cout << "OUVERTURE CAM RECU" << endl << flush;
+             //on incrémente le sémaphore, pas Broadcast car un seul thread le regarde
+            rt_sem_v(&sem_startCamera);
+        } else if (msgRcv->CompareID(MESSAGE_CAM_CLOSE)) {
+            //TODO
+        } else if (msgRcv->CompareID(MESSAGE_CAM_ASK_ARENA)) {
+            rt_mutex_acquire(&mutex_captureArena, TM_INFINITE);
+            captureArena=ARENA_CAPTURE_REQUEST;
+            rt_mutex_release(&mutex_captureArena);
+        } else if (msgRcv->CompareID(MESSAGE_CAM_ARENA_CONFIRM)) {
+            cout << "JE SUIS DANS LE IF CONFIRM" << endl << flush;
+            rt_mutex_acquire(&mutex_captureArena, TM_INFINITE);
+            captureArena=IS_VALIDATED;
+            rt_mutex_release(&mutex_captureArena);
+            cout << "J'ai changé captureArena" << endl << flush;
+        } else if (msgRcv->CompareID(MESSAGE_CAM_ARENA_INFIRM)) {
+            rt_mutex_acquire(&mutex_captureArena, TM_INFINITE);
+            captureArena=IS_NOT_VALIDATED;
+            rt_mutex_release(&mutex_captureArena);
+        } else if (msgRcv->CompareID(MESSAGE_CAM_POSITION_COMPUTE_START)) {
+             rt_mutex_acquire(&mutex_position, TM_INFINITE);
+             requetePosition = REQUETE_CALCUL_POSITION;
+             rt_mutex_release(&mutex_position);
+        } else if (msgRcv->CompareID(MESSAGE_CAM_POSITION_COMPUTE_STOP)) {
+             rt_mutex_acquire(&mutex_position, TM_INFINITE);
+             requetePosition = PAS_DE_REQUETE_POSITION;
+             rt_mutex_release(&mutex_position);
         }
         delete(msgRcv); // mus be deleted manually, no consumer
     }
@@ -505,6 +575,7 @@ void Tasks::StartRobotTask(void *arg) {
     }
 }
 
+
 /**
  * @brief Thread handling control of the robot. // MOVE TASK
  */
@@ -589,7 +660,8 @@ void Tasks::MoveTask(void *arg) {
     }
 }
 
- // AVANCEMENT : Algortithmiquement batterie a l'air ok, le vérifier / faire vérifier ------- Faire le thread th_watchdog puis après voir les thread normaux si y'a des trucs modifs t
+
+// AVANCEMENT : Algortithmiquement batterie a l'air ok, le vérifier / faire vérifier ------- Faire le thread th_watchdog puis après voir les thread normaux si y'a des trucs modifs t
  
  
  /**
@@ -687,4 +759,272 @@ void Tasks::compteur_robot(Message *msg){
        errorCompteur=0;
        rt_mutex_release(&mutex_errorCompteur);
     }  
+}
+
+/**
+ * @brief Thread handling image sending and position computing and sending.
+ */
+void Tasks::ImagePos(void *arg) {
+    //les trois variables ci dessous seront affectées avec les mutex
+    int cs; //camera started
+    int captArena;
+    
+    cout << "Start " << "image arene pos" << endl << flush;
+    // Synchronization barrier (waiting that all tasks are starting)
+    rt_sem_p(&sem_barrier, TM_INFINITE);
+    
+    /**************************************************************************************/
+    /* The task ImagePos starts here                                                               */
+    /**************************************************************************************/
+    rt_task_set_periodic(NULL, TM_NOW, 100000000);
+    //100 ms
+    
+    Arena * sArena;
+    Img * image;
+    MessagePosition * msgPosition;
+    Position position;
+    
+    bool arAv;
+    
+    
+    while (1) {
+        rt_task_wait_period(NULL);
+        cout << "Periodic image pos" << endl << flush;
+        
+        //on récupère la variable protégée par le mutex mutex_cameraStarted
+        rt_mutex_acquire(&mutex_cameraStarted, TM_INFINITE);
+        cs = cameraStarted;
+        rt_mutex_release(&mutex_cameraStarted);
+        
+        if (cs == CAMERA_STARTED) {
+          
+           rt_mutex_acquire(&mutex_captureArena, TM_INFINITE);
+           captArena=captureArena;
+           rt_mutex_release(&mutex_captureArena);
+
+            //on envoie l'image
+            if (captArena == IS_NOT_CAPTURING_ARENA) {
+                
+                int reqPosition;
+                /*****************Img part**********************/
+                cout << "Calcul d'image demandé" << endl << flush;
+                
+                rt_mutex_acquire(&mutex_camera, TM_INFINITE);
+                cout << "mutex camera acquired" << endl << flush;
+                bool isOpen = camera.IsOpen();
+                if (isOpen) {
+                    cout << "CAMERA OPEN!" << endl << flush;
+                    image = camera.Grab().Copy();
+                } else {
+                    cout << "CAMERA CLOSED!" << endl << flush;
+                }
+                cout << "grabed" << endl << flush;
+                rt_mutex_release(&mutex_camera);
+                cout << "mutex camera released" << endl << flush;
+                
+               rt_mutex_acquire(&mutex_position, TM_INFINITE);
+               reqPosition = requetePosition;
+               rt_mutex_release(&mutex_position);
+               /********************Img part***********************/ 
+              
+               /********************Position part******************/
+               
+                //on calcule la position si demandé
+                if (reqPosition == REQUETE_CALCUL_POSITION) {
+                    
+                        rt_mutex_acquire(&mutex_arenaAvailable, TM_INFINITE);
+                        arAv = arenaAvailable;
+                        rt_mutex_release(&mutex_arenaAvailable);
+
+                        if (arAv) {
+                            
+                            rt_mutex_acquire(&mutex_savedArena, TM_INFINITE);
+                            sArena = savedArena;
+                            rt_mutex_release(&mutex_savedArena);
+
+                            cout << "Calcul de position demandé" << endl << flush;
+                            std::list<Position> positions = image->SearchRobot(*sArena);
+                            
+
+                            if (positions.empty()) {
+                                //le robot n'a pas été trouvé
+                                position.NotFound();
+                            } else {
+                                position=positions.front();
+                            }
+                            image->DrawRobot(position);
+
+                            
+                            
+                            //crée et envoie le message
+                            msgPosition = new MessagePosition(MESSAGE_CAM_POSITION, position);
+                            WriteInQueue(&q_messageToMon, msgPosition);
+                        } else {
+                            cout << "Please define an arena before asking for position" << endl << flush;
+                            position.NotFound();
+                            msgPosition = new MessagePosition(MESSAGE_CAM_POSITION, position);
+                            WriteInQueue(&q_messageToMon, msgPosition);
+                        }
+                }
+                /***********************end position part**************/   
+                 //on convertit l'image en string pour le mettre dans le message
+                MessageImg * msgImage = new MessageImg(MESSAGE_CAM_IMAGE, image);
+                cout << "msg créé" << endl << flush;
+                WriteInQueue(&q_messageToMon, msgImage); // msgSend will be deleted by sendToMon
+                cout << "written in queue" << endl << flush;
+           }
+                
+
+        }
+        cout << endl << flush;
+    }
+}
+
+
+/**
+ * @brief Thread handling arena searching
+ */
+void Tasks::ArenaTask(void *arg) {
+    cout << "Start " << " arena task" << endl << flush;
+    // Synchronization barrier (waiting that all tasks are starting)
+    rt_sem_p(&sem_barrier, TM_INFINITE);
+    
+    
+    Arena arena;
+    int cs;
+    
+    Img * image;
+    
+    
+    rt_task_set_periodic(NULL, TM_NOW, 100000000);
+    /**************************************************************************************/
+    /* The task ArenaTask starts here                                                    */
+    /**************************************************************************************/
+    while (1) {
+        
+        rt_task_wait_period(NULL);
+        
+      //on récupère la variable protégée par le mutex mutex_cameraStarted
+        rt_mutex_acquire(&mutex_cameraStarted, TM_INFINITE);
+        cs = cameraStarted;
+        rt_mutex_release(&mutex_cameraStarted);
+             
+        if (cs == CAMERA_STARTED) {
+            int captArena;
+
+            rt_mutex_acquire(&mutex_captureArena, TM_INFINITE);
+            captArena=captureArena;
+            rt_mutex_release(&mutex_captureArena);
+            
+           // cout << "CAPT ARENA " << captArena << endl << flush;
+
+            //on calcule l'arène
+            if (captArena == ARENA_CAPTURE_REQUEST) {
+                MessageImg * msgArena;
+                
+                cout << "Calcul d'arène demandé" << endl << flush;
+                
+                rt_mutex_acquire(&mutex_camera, TM_INFINITE);
+                image = camera.Grab().Copy();
+                rt_mutex_release(&mutex_camera);                
+                
+                arena = image->SearchArena();
+                image->DrawArena(arena);
+                msgArena = new MessageImg(MESSAGE_CAM_IMAGE, image);
+                WriteInQueue(&q_messageToMon, msgArena);
+           
+                rt_mutex_acquire(&mutex_captureArena, TM_INFINITE);
+                captureArena=IS_WAITING_VALIDATION;
+                rt_mutex_release(&mutex_captureArena);
+            }
+            cout << captArena << endl << flush;
+            //si la recherche est validée
+            if (captArena == IS_VALIDATED) {
+                
+                //on svg l'arène
+                rt_mutex_acquire(&mutex_savedArena, TM_INFINITE);
+                savedArena = &arena;
+                rt_mutex_release(&mutex_savedArena);
+                
+                rt_mutex_acquire(&mutex_arenaAvailable, TM_INFINITE);
+                arenaAvailable=true;
+                rt_mutex_release(&mutex_arenaAvailable);
+                
+                cout << "ARENE VALIDEE" << endl << flush;
+                
+                /*
+                 * on repasse la variable captureArena à IS_NOT_CAPTURING_ARENA
+                 * pour repasser au monde d'envoie périodique
+                 * */
+                rt_mutex_acquire(&mutex_captureArena, TM_INFINITE);
+                captureArena=IS_NOT_CAPTURING_ARENA;
+                rt_mutex_release(&mutex_captureArena);
+                
+            }
+            
+            //si la recherche est annulée
+            if (captArena == IS_NOT_VALIDATED) {
+                /*
+                 * on repasse la variable captureArena à IS_NOT_CAPTURING_ARENA
+                 * pour repasser au monde d'envoie périodique
+                 * */
+                rt_mutex_acquire(&mutex_captureArena, TM_INFINITE);
+                captureArena=IS_NOT_CAPTURING_ARENA;
+                rt_mutex_release(&mutex_captureArena);
+                
+            }
+            
+        }
+        cout << endl << flush;
+    }
+}
+
+
+
+
+
+
+
+/**
+ * @briefThread handling the camera start
+ */
+void Tasks::StartCamera(void *arg) {
+    cout << "Start " << __PRETTY_FUNCTION__ << endl << flush;
+    // Synchronization barrier (waiting that all tasks are starting)
+    rt_sem_p(&sem_barrier, TM_INFINITE);
+    
+    //on attend que receiveFromMon ait reçu le msg open_cam
+    rt_sem_p(&sem_startCamera, TM_INFINITE);
+    
+    bool isOpen = false;
+    
+    
+    cout << "Creation de la caméra" << endl << flush;
+    
+    rt_mutex_acquire(&mutex_camera, TM_INFINITE);
+    isOpen = camera.Open();
+    rt_mutex_release(&mutex_camera);
+     
+     if(isOpen){
+        rt_mutex_acquire(&mutex_cameraStarted, TM_INFINITE);
+        cameraStarted = CAMERA_STARTED;
+        rt_mutex_release(&mutex_cameraStarted);  
+   
+        cout << "CAMERA PEUT ETRE START" << endl << flush;
+     } else {
+        Message *nack_camera = new Message(MESSAGE_ANSWER_NACK);
+        WriteInQueue(&q_messageToMon,nack_camera);
+     }
+    
+     cout << "Caméra créée" << endl << flush;
+    
+}
+
+
+
+
+
+
+
+
 }

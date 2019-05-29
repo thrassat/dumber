@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 #Wed May 29 16:11:55 CEST 2019
 /home/rassat/Bureau/4A/s2/Temps_Reeel/dumber/software/raspberry/superviseur-robot/lib/camera.cpp=c1555573520000
 /home/rassat/Bureau/4A/s2/Temps_Reeel/dumber/software/raspberry/superviseur-robot/.gitignore=c1555573520000
@@ -12,6 +13,34 @@
 /home/oanser/Temps_Reel/dumber/software/raspberry/superviseur-robot/tasks.h=c1557835990000
 /home/oanser/Temps_Reel/dumber/software/raspberry/superviseur-robot/nbproject/Package-Debug__RPI_.bash=c1557832038000
 /home/rassat/Bureau/4A/s2/Temps_Reeel/dumber/software/raspberry/superviseur-robot/tasks.cpp=c1559138487000
+=======
+#Wed May 29 17:46:47 CEST 2019
+/home/oanser/Temps_Reel/dumber/software/raspberry/superviseur-robot/Makefile=c1557832038000
+/home/oanser/Temps_Reel/dumber/software/raspberry/superviseur-robot/nbproject/project.xml=c1557832038000
+/home/oanser/Temps_Reel/dumber/software/raspberry/superviseur-robot/lib/camera.cpp=c1557832038000
+/home/oanser/Temps_Reel/dumber/software/raspberry/superviseur-robot/lib/messages.cpp=c1557832038000
+/home/oanser/Temps_Reel/dumber/software/raspberry/superviseur-robot/nbproject/Makefile-Debug__RPI_.mk=c1558938575000
+/home/oanser/Temps_Reel/dumber/software/raspberry/superviseur-robot/main.cpp=c1557832038000
+/home/oanser/Temps_Reel/dumber/software/raspberry/superviseur-robot/nbproject/Makefile-variables.mk=c1558938575000
+/home/oanser/Temps_Reel/dumber/software/raspberry/superviseur-robot/lib/camera.h=c1557832038000
+/home/oanser/Temps_Reel/dumber/software/raspberry/superviseur-robot/lib/base64/compile-and-run-test=c1557832038000
+VERSION=1.3
+/home/oanser/Temps_Reel/dumber/software/raspberry/superviseur-robot/gdbsudo.sh=c1557832038000
+/home/oanser/Temps_Reel/dumber/software/raspberry/superviseur-robot/nbproject/Makefile-Debug__PC_.mk=c1557832038000
+/home/oanser/Temps_Reel/dumber/software/raspberry/superviseur-robot/lib/messages.h=c1557832038000
+/home/oanser/Temps_Reel/dumber/software/raspberry/superviseur-robot/lib/.gitignore=c1557832038000
+/home/oanser/Temps_Reel/dumber/software/raspberry/superviseur-robot/lib/base64/README.md=c1557832038000
+/home/oanser/Temps_Reel/dumber/software/raspberry/superviseur-robot/lib/comrobot.cpp=c1557832038000
+/home/oanser/Temps_Reel/dumber/software/raspberry/superviseur-robot/superviseur.doxygen=c1557832039000
+/home/oanser/Temps_Reel/dumber/software/raspberry/superviseur-robot/lib/img.h=c1558519580000
+/home/oanser/Temps_Reel/dumber/software/raspberry/superviseur-robot/tasks.h=c1559144667000
+/home/oanser/Temps_Reel/dumber/software/raspberry/superviseur-robot/lib/comrobot.h=c1557832038000
+/home/oanser/Temps_Reel/dumber/software/raspberry/superviseur-robot/tasks.cpp=c1559144804000
+/home/oanser/Temps_Reel/dumber/software/raspberry/superviseur-robot/lib/base64/.gitignore=c1557832038000
+/home/oanser/Temps_Reel/dumber/software/raspberry/superviseur-robot/nbproject/private/Makefile-variables.mk=c1557832038000
+/home/oanser/Temps_Reel/dumber/software/raspberry/superviseur-robot/nbproject/Package-Debug__RPI_.bash=c1558938575000
+/home/oanser/Temps_Reel/dumber/software/raspberry/superviseur-robot/.gitignore=c1557832038000
+>>>>>>> master
 /home/oanser/Temps_Reel/dumber/software/raspberry/superviseur-robot/lib/commonitor.cpp=c1557832038000
 /home/rassat/Bureau/4A/s2/Temps_Reeel/dumber/software/raspberry/superviseur-robot/nbproject/project.properties=c1555573520000
 /home/oanser/Temps_Reel/dumber/software/raspberry/superviseur-robot/lib/.gitignore=c1557832038000
@@ -59,12 +88,18 @@ VERSION=1.3
 /home/oanser/Temps_Reel/dumber/software/raspberry/superviseur-robot/lib/base64/compile-and-run-test=c1557832038000
 /home/rassat/Bureau/4A/s2/Temps_Reeel/dumber/software/raspberry/superviseur-robot/lib/base64/LICENSE=c1555573520000
 /home/oanser/Temps_Reel/dumber/software/raspberry/superviseur-robot/lib/commonitor.h=c1557832038000
+<<<<<<< HEAD
 /home/oanser/Temps_Reel/dumber/software/raspberry/superviseur-robot/.dep.inc=c1557832038000
 /home/oanser/Temps_Reel/dumber/software/raspberry/superviseur-robot/nbproject/private/Makefile-variables.mk=c1557832038000
 /home/oanser/Temps_Reel/dumber/software/raspberry/superviseur-robot/nbproject/Makefile-variables.mk=c1557832038000
 /home/rassat/Bureau/4A/s2/Temps_Reeel/dumber/software/raspberry/superviseur-robot/nbproject/project.xml=c1555573520000
 /home/rassat/Bureau/4A/s2/Temps_Reeel/dumber/software/raspberry/superviseur-robot/nbproject/private/Makefile-variables.mk=c1555573520000
 /home/rassat/Bureau/4A/s2/Temps_Reeel/dumber/software/raspberry/superviseur-robot/nbproject/Package-Debug__PC_.bash=c1555573520000
+=======
+/home/oanser/Temps_Reel/dumber/software/raspberry/superviseur-robot/nbproject/Makefile-impl.mk=c1557832038000
+/home/oanser/Temps_Reel/dumber/software/raspberry/superviseur-robot/nbproject/Package-Debug__PC_.bash=c1557832038000
+/home/oanser/Temps_Reel/dumber/software/raspberry/superviseur-robot/nbproject/project.properties=c1557832038000
+>>>>>>> master
 /home/oanser/Temps_Reel/dumber/software/raspberry/superviseur-robot/lib/base64/base64.cpp=c1557832038000
 /home/oanser/Temps_Reel/dumber/software/raspberry/superviseur-robot/nbproject/Makefile-Debug__PC_.mk=c1557832038000
 /home/rassat/Bureau/4A/s2/Temps_Reeel/dumber/software/raspberry/superviseur-robot/nbproject/Makefile-Debug__RPI_.mk=c1559132002000

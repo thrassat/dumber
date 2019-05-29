@@ -18,6 +18,22 @@
 #ifndef __TASKS_H__
 #define __TASKS_H__
 
+#define CAMERA_NOT_STARTED 0
+#define CAMERA_STARTED 1
+
+#define IS_NOT_CAPTURING_ARENA 0
+#define ARENA_CAPTURE_REQUEST 1
+#define IS_WAITING_VALIDATION 2
+#define IS_VALIDATED 3
+#define IS_NOT_VALIDATED 4
+
+
+#define PAS_DE_REQUETE_POSITION 0
+#define REQUETE_CALCUL_POSITION 1
+
+#define ARENA_AVAILABLE 0
+#define ARENA_NOT_AVAILABLE 1
+
 #include <unistd.h>
 #include <iostream>
 
@@ -65,10 +81,30 @@ private:
     ComMonitor monitor;
     ComRobot robot;
     int robotStarted = 0;
+
     int watchdog = 0 ; 
     int errorCompteur=0; //Compte le nombre d'erreur d'ecriture 
     bool arretConnexion = false;
+
+    
+    //protégée par le mutex_arene
+    int captureArena = IS_NOT_CAPTURING_ARENA;
+    //protégée par le mutex_cameraStarted
+    int cameraStarted = CAMERA_NOT_STARTED;
+    //protégée par le mutex_position
+    int requetePosition = PAS_DE_REQUETE_POSITION;
+    // Acces à la caméra
+    Camera camera;
+    
+r
     int move = MESSAGE_ROBOT_STOP;
+    
+    bool arenaAvailable = ARENA_AVAILABLE;
+    
+    
+    
+    //pour sotcket les adresses svg par l'utilisateur
+    Arena * savedArena;
    // int batteryLevel = BatteryLevel.BATTERY_UNKNOWN;
     
     
@@ -88,7 +124,8 @@ private:
     
         
     //threads caméras
-    RT_TASK th_image;
+    RT_TASK th_imagePos;
+    RT_TASK th_arena;
     RT_TASK th_startCamera;
     
     
@@ -107,10 +144,12 @@ private:
     RT_MUTEX mutex_arretConnexion ;
     
     //mutex caméra
-    RT_MUTEX mutex_arene;
+    RT_MUTEX mutex_captureArena;
     RT_MUTEX mutex_position;
     RT_MUTEX mutex_cameraStarted;
-
+    RT_MUTEX mutex_savedArena;
+    RT_MUTEX mutex_camera;
+    RT_MUTEX mutex_arenaAvailable;
     /**********************************************************************/
     /* Semaphores                                                         */
     /**********************************************************************/
@@ -174,6 +213,7 @@ private:
      */
     void MoveTask(void *arg);
     
+
     // Ours 
     
     // Task thread
@@ -185,6 +225,22 @@ private:
     
     void compteur_robot(Message *msg) ; 
     
+
+    /**
+     * @brief Thread handling image sending and position computing and sending.
+     */
+    void ImagePos(void *arg);
+    
+    /**
+     * @brief Thread handling arena searching
+     */
+    void ArenaTask(void *arg);
+    
+    /**
+     * @brief Thread handling the camera start
+     */
+    void StartCamera(void *arg);
+
     
     /**********************************************************************/
     /* Queue services                                                     */
@@ -202,7 +258,11 @@ private:
      * @return Message read
      */
     Message *ReadInQueue(RT_QUEUE *queue);
-
+    
+    /**
+     * @brief
+     */
+    void ImageArenaPos(void *args);
 };
 
 #endif // __TASKS_H__ 

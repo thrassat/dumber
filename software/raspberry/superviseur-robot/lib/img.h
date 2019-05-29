@@ -68,6 +68,11 @@ public:
         direction=cv::Point2f(0.0,0.0);
     }
     
+    void NotFound() {
+        center.x=-1.0;
+        center.y=-1.0;
+    }
+    
     /**
      * Build a string representation of the object
      * @return String containing object information
